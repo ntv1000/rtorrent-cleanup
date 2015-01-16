@@ -114,20 +114,23 @@ def main():
     not_referenced = list(set(downloads) - set(referenced))
     #not_referenced = [x for x in downloads if x not in referenced]
 
-    sizes = [get_dir_or_file_size(x) for x in not_referenced]
-    total_size = sum(sizes)
-    print ("deleting all unreferenced files will free up " + format_size(total_size) + " of storage")
+    if len(not_referenced) > 0:
+        sizes = [get_dir_or_file_size(x) for x in not_referenced]
+        total_size = sum(sizes)
+        print ("deleting all unreferenced files will free up " + format_size(total_size) + " of storage")
 
-    if args.dryrun_flag:
-        print("Not referenced files:")
-        for path in not_referenced:
-            print(path)
-    else:
-        print("unreferenced files will now be deleted (WARNING: DELETED FILES ARE NOT RECOVERABLE) continue? (yes/no) ",end="")
-        input = raw_input()
-        if input == "yes":
+        if args.dryrun_flag:
+            print("Not referenced files:")
             for path in not_referenced:
-                delete_path(path)
+                print(path)
+        else:
+            print("unreferenced files will now be deleted (WARNING: DELETED FILES ARE NOT RECOVERABLE) continue? (yes/no) ",end="")
+            input = raw_input()
+            if input == "yes":
+                for path in not_referenced:
+                    delete_path(path)
+    else:
+        print("there are no files that are not referenced in rtorrent - exiting...")
 
 if __name__ == "__main__":
     main()
