@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import shutil
 import bencode
 import argparse
 
@@ -28,6 +29,14 @@ def get_dir_or_file_size(path):
         result = os.path.getsize(path) 
     return result
 
+def delete_path(path):
+    debug("deleting " + path)
+    if os.path.isdir(path):        
+        shutil.rmtree(path) 
+    elif os.path.isfile(path):
+        os.remove(path)
+
+
 def format_size(size):
     if size >= 1024**3: # GB
         return str(size/(1024**3)) + "GB"
@@ -46,6 +55,9 @@ def debug(msg):
 def main():
     # parse arguments
     # TODO option to also look into the folders and delete unreferenced files there
+    # TODO option to confirm every deletion
+    # TODO quite option to just run without any confirmations
+    # TODO option for save mode that just moves all unreferenced files into a target directory
     parser = argparse.ArgumentParser(description='Deletes files from rtorrent download directories that are not referenced in rtorrent', epilog='Github: github.com/ntv1000')
     parser.add_argument('--debug', dest='debug_flag', action='store_true', default=False, help='Debugging information will be displayed')
     parser.add_argument('--pause_on_debug', dest='pause_on_debug', action='store_true', default=False, help='Debugging information will be displayed')
@@ -110,6 +122,12 @@ def main():
         print("Not referenced files:")
         for path in not_referenced:
             print(path)
-        
+    else:
+        print("unreferenced files will now be deleted (WARNING: DELETED FILES ARE NOT RECOVERABLE) continue? (yes/no) ",end="")
+        input = raw_input()
+        if input == "yes":
+            for path in not_referenced:
+                delete_path(path)
+
 if __name__ == "__main__":
     main()
