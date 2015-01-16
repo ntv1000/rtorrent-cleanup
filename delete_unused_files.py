@@ -1,13 +1,10 @@
 from __future__ import print_function
 import os
 import bencode
+import argparse
 
-# option to also look into the folders and delete unreferenced files there
 
-debug_flag = False
-pause_on_debug = False
-dryrun = True
-ask_before_delete = True
+args = object()
 
 def check_if_single_file_torrent(torrent_file_path):
     #return (path in download_dirs) # old version
@@ -40,22 +37,34 @@ def format_size(size):
         return str(size/(1024**1)) + "KB"
 
 def debug(msg):
-    if debug_flag:
+    if args.debug_flag:
         print(msg)
-        if pause_on_debug:
+        if args.pause_on_debug:
             print("Continue? ", end = "")
             raw_input()
 
 def main():
-    rtorrent_working_dir = "/mnt/internal0/rtorrent"
-    download_dirs = ["/mnt/internal0/rtorrent/data", "/mnt/external0/rtorrent/data"]
+    # parse arguments
+    # TODO option to also look into the folders and delete unreferenced files there
+    parser = argparse.ArgumentParser(description='Deletes files from rtorrent download directories that are not referenced in rtorrent', epilog='Github: github.com/ntv1000')
+    parser.add_argument('--debug', dest='debug_flag', action='store_true', default=False, help='Debugging information will be displayed')
+    parser.add_argument('--pause_on_debug', dest='pause_on_debug', action='store_true', default=False, help='Debugging information will be displayed')
+    parser.add_argument('--dry', dest='dryrun_flag', action='store_true', default=False, help='All files that would be deleted will be listed, but not deleted')
+    parser.add_argument('rtorrent_working_dir', metavar='WORKING_DIR', help='The working directory of your rtorrent instance')
+    parser.add_argument('rtorrent_download_dirs', metavar='DOWNLOAD_DIR', nargs='+', help='The download directories that should be cleaned up')
+    global args
+    args = parser.parse_args()
+    debug('debug_flag=' + str(args.debug_flag))
+    debug('dryrun_flag=' + str(args.dryrun_flag))
+    debug('rtorrent_working_dir=' + args.rtorrent_working_dir)
+    debug('rtorrent_download_dirs=' + str(args.rtorrent_download_dirs))
 
-    rtorrent_files = [os.path.join(rtorrent_working_dir, f) for f in os.listdir(rtorrent_working_dir) if os.path.isfile(os.path.join(rtorrent_working_dir, f)) and os.path.splitext(f)[1] == ".rtorrent"]
+    rtorrent_files = [os.path.join(args.rtorrent_working_dir, f) for f in os.listdir(args.rtorrent_working_dir) if os.path.isfile(os.path.join(args.rtorrent_working_dir, f)) and os.path.splitext(f)[1] == ".rtorrent"]
 
     downloads = list() 
     referenced = list()
 
-    for dir in download_dirs:
+    for dir in args.rtorrent_download_dirs:
         downloads += [os.path.join(dir, x) for x in os.listdir(dir)]
 
     print("found " + str(len(downloads)) + " downloaded files")
