@@ -106,9 +106,10 @@ def main():
     total_size = sum(sizes)
     print ("deleting all unreferenced files will free up " + format_size(total_size) + " of storage")
 
-    print("Not referenced files")
-    for path in not_referenced:
-        debug(path)
+    if args.dryrun_flag:
+        print("Not referenced files:")
+        for path in not_referenced:
+            print(path)
         
 if __name__ == "__main__":
     main()
