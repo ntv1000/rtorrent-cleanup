@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from __future__ import print_function
 import os
 import shutil
@@ -44,6 +45,7 @@ def format_size(size):
         return str(size/(1024**2)) + "MB"
     if size >= 1024**1: # KB
         return str(size/(1024**1)) + "KB"
+    return str(size) + "B"
 
 def debug(msg):
     if args.debug_flag:
