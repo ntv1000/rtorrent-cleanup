@@ -6,7 +6,13 @@ import bencode
 import argparse
 
 
-args = object()
+args = argparse.Namespace()
+args.debug_flag = False
+args.pause_on_debug = False
+args.dryrun_flag = False
+
+def get_rtorrent_files(path):
+    return [os.path.join(path, f) for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and os.path.splitext(f)[1] == ".rtorrent"]
 
 def check_if_single_file_torrent(torrent_file_path):
     #return (path in download_dirs) # old version
@@ -54,31 +60,18 @@ def debug(msg):
             print("Continue? ", end = "")
             raw_input()
 
-def main():
-    # parse arguments
-    # TODO option to also look into the folders and delete unreferenced files there
-    # TODO option to confirm every deletion
-    # TODO quite option to just run without any confirmations
-    # TODO option for save mode that just moves all unreferenced files into a target directory
-    parser = argparse.ArgumentParser(description='Deletes files from rtorrent download directories that are not referenced in rtorrent', epilog='Github: github.com/ntv1000')
-    parser.add_argument('--debug', dest='debug_flag', action='store_true', default=False, help='Debugging information will be displayed')
-    parser.add_argument('--pause_on_debug', dest='pause_on_debug', action='store_true', default=False, help='Debugging information will be displayed')
-    parser.add_argument('--dry', dest='dryrun_flag', action='store_true', default=False, help='All files that would be deleted will be listed, but not deleted')
-    parser.add_argument('rtorrent_working_dir', metavar='WORKING_DIR', help='The working directory of your rtorrent instance')
-    parser.add_argument('rtorrent_download_dirs', metavar='DOWNLOAD_DIR', nargs='+', help='The download directories that should be cleaned up')
-    global args
-    args = parser.parse_args()
+def main(rtorrent_working_dir, rtorrent_download_dirs, dont_confirm=False):
     debug('debug_flag=' + str(args.debug_flag))
     debug('dryrun_flag=' + str(args.dryrun_flag))
-    debug('rtorrent_working_dir=' + args.rtorrent_working_dir)
-    debug('rtorrent_download_dirs=' + str(args.rtorrent_download_dirs))
+    debug('rtorrent_working_dir=' + rtorrent_working_dir)
+    debug('rtorrent_download_dirs=' + str(rtorrent_download_dirs))
 
-    rtorrent_files = [os.path.join(args.rtorrent_working_dir, f) for f in os.listdir(args.rtorrent_working_dir) if os.path.isfile(os.path.join(args.rtorrent_working_dir, f)) and os.path.splitext(f)[1] == ".rtorrent"]
+    rtorrent_files = get_rtorrent_files(rtorrent_working_dir)
 
     downloads = list() 
     referenced = list()
 
-    for dir in args.rtorrent_download_dirs:
+    for dir in rtorrent_download_dirs:
         downloads += [os.path.join(dir, x) for x in os.listdir(dir)]
 
     print("found " + str(len(downloads)) + " downloaded files")
@@ -126,13 +119,27 @@ def main():
             for path in not_referenced:
                 print(path)
         else:
-            print("unreferenced files will now be deleted (WARNING: DELETED FILES ARE NOT RECOVERABLE) continue? (yes/no) ",end="")
-            input = raw_input()
-            if input == "yes":
+            if not dont_confirm:
+                print("unreferenced files will now be deleted (WARNING: DELETED FILES ARE NOT RECOVERABLE) continue? (yes/no) ",end="")
+                input = raw_input()
+            if dont_confirm or input == "yes":
                 for path in not_referenced:
                     delete_path(path)
     else:
         print("there are no files that are not referenced in rtorrent - exiting...")
 
 if __name__ == "__main__":
-    main()
+    # parse arguments
+    # TODO option to also look into the folders and delete unreferenced files there
+    # TODO option to confirm every deletion
+    # TODO quite option to just run without any confirmations
+    # TODO option for save mode that just moves all unreferenced files into a target directory
+    parser = argparse.ArgumentParser(description='Deletes files from rtorrent download directories that are not referenced in rtorrent', epilog='Github: github.com/ntv1000')
+    parser.add_argument('--debug', dest='debug_flag', action='store_true', default=False, help='Debugging information will be displayed')
+    parser.add_argument('--pause_on_debug', dest='pause_on_debug', action='store_true', default=False, help='Debugging information will be displayed')
+    parser.add_argument('--dry', dest='dryrun_flag', action='store_true', default=False, help='All files that would be deleted will be listed, but not deleted')
+    parser.add_argument('rtorrent_working_dir', metavar='WORKING_DIR', help='The working directory of your rtorrent instance')
+    parser.add_argument('rtorrent_download_dirs', metavar='DOWNLOAD_DIR', nargs='+', help='The download directories that should be cleaned up')
+    #global args
+    args = parser.parse_args()
+    main(args.rtorrent_working_dir, args.rtorrent_download_dirs)
