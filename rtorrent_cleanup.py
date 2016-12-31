@@ -92,8 +92,7 @@ def main(rtorrent_working_dir, rtorrent_download_dirs, dont_confirm=False):
                     with open (torrent_file, "r") as f:
                         content = f.read()
                     single_file_name = bencode.decode(content)["info"]["name"]
-                    assert os.path.isfile(os.path.join(path, single_file_name))
-                    debug("single-file torrent: " + single_file_name)
+                    debug("single-file torrent: " + os.path.join(path, single_file_name))
                     referenced.append(os.path.join(path, single_file_name))
                 else: 
                     debug("multi-file torrent: " + path)
@@ -103,11 +102,21 @@ def main(rtorrent_working_dir, rtorrent_download_dirs, dont_confirm=False):
         else:
             print("ERROR - empty file")
 
-    print("found " + str(len([x for x in referenced])) + " files that were referenced")
-    print("found " + str(len(set(downloads) - set(referenced))) + " files that were not referenced")
+    not_referenced = set()
+    for path in set(downloads):
+        path = os.path.expanduser(path)
+        is_referenced = False
+        for p in set(referenced):
+            p = os.path.expanduser(p)
+            if os.path.exists(p) and os.path.exists(p) and os.path.samefile(path,p):
+                is_referenced = True
+                break
+        if not is_referenced:
+            not_referenced.add(path)
 
-    not_referenced = list(set(downloads) - set(referenced))
-    #not_referenced = [x for x in downloads if x not in referenced]
+    print("found " + str(len([x for x in referenced])) + " files that were referenced")
+    print("found " + str(len(not_referenced)) + " files that were not referenced")
+
 
     if len(not_referenced) > 0:
         sizes = [get_dir_or_file_size(x) for x in not_referenced]
