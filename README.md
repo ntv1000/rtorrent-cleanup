@@ -4,7 +4,7 @@ This script is used to automatically delete files that are not visible in rtorre
 
 # Usage
 
-`./delete_unused_files.py [--dry] WORKING_DIR DOWNLOAD_DIR [DOWNLOAD_DIR ...]`
+`./rtorrent_cleanup.py [--dry] WORKING_DIR DOWNLOAD_DIR [DOWNLOAD_DIR ...]`
 
 **Arguments:**
 
@@ -18,6 +18,6 @@ This script is used to automatically delete files that are not visible in rtorre
 
 # Example
 
-`./delete_unused_files.py /path/to/working/dir/ /path/to/download/dir/`
+`./rtorrent_cleanup.py /path/to/working/dir/ /path/to/download/dir/`
 
 This will delete all files from `/path/to/working/dir` that are not visible in the rtorrent instance which uses `/path/to/download/dir/` as session directory.
